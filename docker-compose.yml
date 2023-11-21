@@ -1,0 +1,53 @@
+version: "3"
+services:
+# HTTP SERVER
+  nginx:
+    restart: always
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./nginx
+    ports:
+      - "3050:80"
+    networks:
+      dev_net:
+        aliases:
+          - nginx
+
+# BACKEND SERVER SOLUTION
+  backend:
+    build: ./backEndApp
+    ports:
+        - 8080:8080
+        - 8081:8081
+    networks:
+      dev_net:
+        aliases:
+          - backend
+
+# DATABASE SERVER
+  mssqlserver:
+    build: ./dataBase
+    ports:
+        - 1433:1433
+    networks:
+      dev_net:
+        aliases:
+          - mssqlserver
+
+# FRONTEND BUILD
+  frontend:
+    build: ./frontendapp
+    ports:
+      - 3000:3000
+    networks:
+      dev_net:
+        aliases:
+          - frontend
+
+
+networks:
+  dev_net:
+    name: development_network
+    driver: bridge
+    ipam:
+      driver: default
