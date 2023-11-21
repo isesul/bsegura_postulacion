@@ -5,6 +5,7 @@ export interface User {
     name: string
     email: string
     age: number
+    [key: string]: string | undefined
 }
 
 export type UserList = User[]

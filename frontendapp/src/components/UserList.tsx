@@ -2,6 +2,7 @@ import { Component, ChangeEvent } from "react";
 import UserService from "../services/users";
 import { Link } from "react-router-dom";
 import { User } from '../interfaces/user';
+import UserForm from "./UserForm";
 
 type Props = {};
 
@@ -146,35 +147,11 @@ export default class UserList extends Component<Props, State>{
       </div>
 
       <div className="col-md-6">
+        <h4>User Detail</h4>
+        <br />
+        <br />
         {currentUser ? (
-          <div>
-            <h4>User</h4>
-            <div>
-              <label>
-                <strong>Name:</strong>
-              </label>{" "}
-              {currentUser.name}
-            </div>
-            <div>
-              <label>
-                <strong>Email:</strong>
-              </label>{" "}
-              {currentUser.email}
-            </div>
-            <div>
-              <label>
-                <strong>Age:</strong>
-              </label>{" "}
-              {currentUser.age }
-            </div>
-
-            <Link
-              to={"/users/" + currentUser.id}
-              className="badge badge-warning"
-            >
-              Edit
-            </Link>
-          </div>
+          <UserForm currentUser={this.state.currentUser} state={this.state}></UserForm>
         ) : (
           <div>
             <br />
