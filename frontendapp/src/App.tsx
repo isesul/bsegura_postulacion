@@ -26,8 +26,9 @@ function App() {
       <div className="App">
       <BrowserRouter>
         <Routes>
-          <Route path="create" element={<UserForm />} />
+          <Route path="/" element={<UserList />} />
           <Route path="list" element={<UserList  />} />
+          <Route path="create" element={<UserForm />} />
         </Routes>
       </BrowserRouter>
       </div>

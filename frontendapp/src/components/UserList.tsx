@@ -35,27 +35,31 @@ export default class UserList extends Component<Props, State>{
     };
   }
 
-  componentDidMount() {
-    this.retrieveUsers();
+  async componentDidMount() {
+    await this.retrieveUsers();
+    console.log('componentDidMount');
   }
 
-  retrieveUsers() {
-    UserService.getAll()
+  async componentDidUpdate() {
+    // await this.selectPage(this.state.currentpage);
+    console.log('componentDidUpdate', this.state.currentpage);
+  }
+
+  async retrieveUsers() {
+    await UserService.getAll()
       .then((response: any) => {
         this.setState({
           users: response.data,
           totalpages: response.headers.totalpages
         });
-        console.log(response.data);
-        console.info(response);
       })
       .catch((e: Error) => {
-        console.log(e);
+        console.error(e);
       });
   }
 
-  selectPage(page: number){
-    UserService.getPage(page)
+  async selectPage(page: number){
+    await UserService.getPage(page)
     .then((response: any) => {
       this.setState({
         users: response.data,
@@ -68,20 +72,20 @@ export default class UserList extends Component<Props, State>{
     });
   }
 
-  nextPage(){
+  async nextPage(){
     if( (this.state.currentpage+1)<=this.state.totalpages ){
-      this.selectPage((this.state.currentpage+1));
+      await this.selectPage((this.state.currentpage+1));
     }
   }
 
-  previousPage(){
+  async previousPage(){
     if( (this.state.currentpage-1) > 0 ){
-      this.selectPage((this.state.currentpage-1));
+      await this.selectPage((this.state.currentpage-1));
     }
   }
 
-  refreshList() {
-    this.retrieveUsers();
+  async refreshList() {
+    await this.selectPage(this.state.currentpage);
     this.setState({
       currentUser: null,
       currentIndex: -1
@@ -98,16 +102,16 @@ export default class UserList extends Component<Props, State>{
   render() {
     const { searchTitle, users, currentUser, currentIndex, totalpages } = this.state;
     let pages = [];
-    
     for(let i = 1; i <= totalpages; i++){
       pages.push(i);
     }
+
     return (
     <div className="list row">
       <div className="col-md-6">
         <h4>User List</h4>
 
-        <table className="table table-striped">
+        <table className="table  table-hover">
           <thead>
             <tr>
               <th scope="col">#</th>
@@ -121,11 +125,16 @@ export default class UserList extends Component<Props, State>{
 
           {users &&
             users.map((user: User, index: number) => (
-              <tr onClick={() => this.setActiveUser(user, index)} key={index} >
-                <th scope="row">{user.id}</th>
-                <td>{user.name}</td>
-                <td>{user.email}</td>
-                <td>{user.age}</td>
+              <tr 
+                className={currentIndex===index?'table-active':''} 
+                onClick={() => this.setActiveUser(user, index)} 
+                key={index} >
+
+                  <th key={user.id} scope="row">{user.id}</th>
+                  <td>{user.name}</td>
+                  <td>{user.email}</td>
+                  <td>{user.age}</td>
+
               </tr>
           ))}
           </tbody>
@@ -133,17 +142,21 @@ export default class UserList extends Component<Props, State>{
 
         <nav aria-label="Page navigation">
           <ul className="pagination">
-            <li className="page-item"><a onClick={() => this.previousPage()} className="page-link" href="#">Previous</a></li>
-
+            <li key='page-previous' className="page-item"><a onClick={() => this.previousPage()} className="page-link" href="#">Previous</a></li>
             {
               pages.map((page:number) => (
-                
-                <li className={page == this.state.currentpage ? "active" : "inactive"}><a onClick={() => this.selectPage(page)} className="page-link" >{page}</a></li>
+                <li 
+                  key={`page-${page}`}
+                  className={page == this.state.currentpage ? "active" : "inactive"}
+                >
+                    <a onClick={() => this.selectPage(page)} className="page-link" >{page}</a>
+                </li>
               ))
             }
-          <li className="page-item"><a onClick={() => this.nextPage()} className="page-link" href="#">Next</a></li>
+          <li key='page-next' className="page-item"><a onClick={() => this.nextPage()} className="page-link" href="#">Next</a></li>
           </ul>
         </nav>
+
       </div>
 
       <div className="col-md-6">
@@ -151,7 +164,7 @@ export default class UserList extends Component<Props, State>{
         <br />
         <br />
         {currentUser ? (
-          <UserForm currentUser={this.state.currentUser} state={this.state}></UserForm>
+          <UserForm currentUser={this.state.currentUser} state={this}></UserForm>
         ) : (
           <div>
             <br />
