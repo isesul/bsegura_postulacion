@@ -15,7 +15,7 @@ services:
 
 # BACKEND SERVER SOLUTION
   backend:
-    build: ./backEndApp
+    build: ./backendapp
     ports:
         - 8080:8080
         - 8081:8081
@@ -26,7 +26,7 @@ services:
 
 # DATABASE SERVER
   mssqlserver:
-    build: ./dataBase
+    build: ./database
     ports:
         - 1433:1433
     networks:
