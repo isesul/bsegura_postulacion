@@ -6,6 +6,10 @@ class UserService {
     return http.get<Array<UserList>>("/Users");
   }
 
+  getPage(page: number){
+    return http.get<Array<UserList>>(`/Users/?page=${page}`);
+  }
+
   get(id: string) {
     return http.get<User>(`/Users/${id}`);
   }

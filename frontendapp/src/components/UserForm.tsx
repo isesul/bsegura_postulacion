@@ -36,7 +36,6 @@ const UserForm = () => {
 
     const [inputVal, setInputVal] = useState<User>(INITIAL_STATE)
 
-
     const handler = () => {}
 
     const changeEvent = (evnt: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,9 +45,25 @@ const UserForm = () => {
     return (
         <div>
             <form>
-                <input onChange={changeEvent} type='text' name='name' placeholder="Name" />
-                <input onChange={changeEvent} type='text' name='email' placeholder="Email" />
-                <input onChange={changeEvent} type='number' name='age' placeholder="Age" />
+                <div className="input-group mb-3">
+                    <span className="input-group-text" id="input-name">👤</span>
+                    <input onChange={changeEvent} type="text" className="form-control" name='name' placeholder="Name" aria-label="Name" aria-describedby="basic-addon1" />
+                </div>
+
+                <div className="input-group mb-3">
+                    <span className="input-group-text" id="input-email">✉</span>
+                    <input onChange={changeEvent} type="text" className="form-control" name='email' placeholder="Email" aria-label="Email" aria-describedby="addon-wrapping" />
+                </div>
+
+                <div className="input-group mb-3">
+                    <span className="input-group-text" id="input-age"> № </span>
+                    <input onChange={changeEvent} type="text" className="form-control" name='age'  placeholder="Age" aria-label="Age" aria-describedby="addon-wrapping" />
+                </div>
+                <div className="input-group mb-3 justify-content-md-end">
+
+                    <button type="button" className="btn btn-primary">Save</button>
+                </div>
+
             </form>
         </div>
     )
