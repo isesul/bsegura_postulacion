@@ -1,5 +1,8 @@
 using BackEndApp.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace BackEndApp
 {
@@ -8,6 +11,28 @@ namespace BackEndApp
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            // Setup JWT
+            builder.Configuration.AddJsonFile("appsettings.json");
+
+
+            var secretKey = builder.Configuration.GetSection("JWTSettings").GetSection("secret").ToString();
+            var secretBytes = Encoding.UTF8.GetBytes(secretKey);
+
+            builder.Services.AddAuthentication(config => { 
+                config.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                config.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(config => { 
+                config.RequireHttpsMetadata = false;
+                config.SaveToken = true;
+                config.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(secretBytes),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                };
+            });
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
@@ -22,6 +47,8 @@ namespace BackEndApp
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+
+            app.UseAuthentication();
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();

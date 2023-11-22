@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using BackEndApp.Models;
 using Microsoft.AspNetCore.Components.QuickGrid;
 using BackEndApp.Helpers;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BackEndApp.Controllers
 {
@@ -48,6 +49,7 @@ namespace BackEndApp.Controllers
         }
 
         // PUT: api/Users/5
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUser(int id, User user)
         {
@@ -78,6 +80,7 @@ namespace BackEndApp.Controllers
         }
 
         // POST: api/Users
+        [Authorize]
         [HttpPost]
         public async Task<ActionResult<User>> PostUser(User user)
         {
@@ -88,6 +91,7 @@ namespace BackEndApp.Controllers
         }
 
         // DELETE: api/Users/5
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
