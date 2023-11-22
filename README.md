@@ -13,5 +13,3 @@ Abrir en el navegador la direccion http://localhost:3050
 
 ## To Do
 - Agregar autenticación al backend y agrega un formulario de logeo utilizando JWT
-(JSON Web Tokens).
-- Implementa una funcionalidad que permita editar y eliminar usuarios.
