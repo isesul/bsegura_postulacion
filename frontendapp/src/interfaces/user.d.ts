@@ -8,6 +8,6 @@ export interface User {
     [key: string]: string | undefined
 }
 
-export type UserList = User[]
+export type IUserList = User[];
 
 export type FilterValue = typeof USERS_FILTERS[keyof typeof USERS_FILTERS]

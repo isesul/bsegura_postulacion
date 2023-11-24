@@ -1,36 +1,43 @@
-import { useState } from 'react';
+import { useState, createContext, useContext } from 'react';
 import './App.css';
 import UserForm from './components/UserForm';
 import UserList from './components/UserList';
 import 'bootstrap/dist/css/bootstrap.css';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Login from './components/Login';
+import Header from './components/Header';
+
+import {User, IUserList} from "./interfaces/user";
+import Dashboard from './components/Dashboard';
+import {UsersContextProvider, CurrentUserContextProvider, UsersContext} from './contexts/UsersContextProvider';
+import { LoginContextProvider } from './contexts/LoginContextProvider';
+
+
 
 function App() {
-  const [number, setNumber] = useState<number|string>(5)
-
+  
   return (
     <div className="container">
 
-      <nav className="navbar navbar-expand-lg bg-body-tertiary">
-        <div className="container-fluid">
-          <a className="navbar-brand" href="#">User CRUD</a>
-          <div className="collapse navbar-collapse" id="navbarNavAltMarkup">
-            <div className="navbar-nav">
-              <a className="nav-link active" aria-current="page" href="/list">List</a>
-              <a className="nav-link" href="/create">Create</a>
-            </div>
-          </div>
-        </div>
-      </nav>
-
       <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<UserList />} />
-          <Route path="list" element={<UserList  />} />
-          <Route path="create" element={<UserForm />} />
-        </Routes>
-      </BrowserRouter>
+
+      <LoginContextProvider>
+        <UsersContextProvider>
+          <CurrentUserContextProvider>
+            <BrowserRouter>
+              <Header />
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+
+                <Route path="dashboard" element={<Dashboard  />} />
+
+                <Route path="create" element={<UserForm />} />
+              </Routes>
+            </BrowserRouter>
+          </CurrentUserContextProvider>
+        </UsersContextProvider>
+      </LoginContextProvider>
+
       </div>
     </div>
 

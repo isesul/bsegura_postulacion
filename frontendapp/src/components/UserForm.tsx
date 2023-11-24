@@ -1,149 +1,124 @@
-import { Component } from "react"
-import { User } from "../interfaces/user"
+import { useEffect, useState } from "react"
+import { useCurrentUser, useUsers } from "../contexts/UsersContextProvider";
+import { User } from "../interfaces/user";
 import UserService from "../services/users";
+import { useAuth } from "../contexts/LoginContextProvider";
 
-type Props = {
-  currentUser?: User | null
-  state?: any
-};
-type State = {
-  currentUser: User
-  currentpage: number
-  newUser?: User
-  redirect?: boolean
-};
+export default function UserForm() {
+    const stateCurrentUsers = useCurrentUser();
+    const stateUsers = useUsers();
+    const stateAuth = useAuth();
 
-const EMPTY_USER = {
-  name: "",
-  email: "",
-  age: 0
-} as User
+    const isAuthenticated = stateAuth.isAuthenticated;
+    const currentUser: User = (stateCurrentUsers.currentUser) ? 
+        stateCurrentUsers.currentUser : {} as User ;
 
-export default class UserForm extends Component<Props, State>{
-  constructor(props: Props) {
-    super(props);
-    this.changeEvent = this.changeEvent.bind(this);
-    this.saveEvent = this.saveEvent.bind(this);
-    this.state = {
-      currentUser: EMPTY_USER,
-      currentpage: 1,
-      redirect: false
-    };
-  }
-
-  componentDidMount() {
-    console.info('UserForm.componentDidMount')
-  }
-  componentDidUpdate() {    
-    console.info('UserForm.componentDidUpdate')
-  }
-
-
-  changeEvent(event: React.ChangeEvent<HTMLInputElement>) {
-    console.info('UserForm.changeEvent')
-    if(this.props.currentUser != null){
-      try {
-        this.props.currentUser[event.target.name] = event.target.value;
-        this.setState({
-          currentUser: this.props.currentUser
-        });
-      } catch (error) {
-        console.error('error', error);
-      }
-    }
-    else{
-      let currentUser = this.state.currentUser
-      try {
-        if(currentUser!=null){
-          currentUser[event.target.name] = event.target.value;
-        }
-        this.setState({currentUser});
-      } catch(error){
-        console.error('error', error);
-      }
-    }
-  }
-
-  async saveEvent(event?: any) {
-    console.info('UserForm.saveEvent')
-    let status = await UserService.create(this.state.currentUser);
-  }
-
-
-  async updateEvent(){
-    console.info('UserForm.updateEvent')
-    const data = this.props.currentUser as User;
-    let status: any = "";
-
-    if(this.props.currentUser?.id != null && this.props.currentUser?.id != undefined){
-      const id = this.props.currentUser?.id;
-      status = await UserService.update(data, id);
-    }
+    const [name, setName] = useState<any>();
+    const [email, setEmail] = useState<any>();
+    const [age, setAge] = useState<any>(0);
     
-    try {
-      const userListState = this.props.state.state;
-      let idx = userListState.users.findIndex(((obj:any) => obj.id == this.props.currentUser?.id))
-      userListState.users[idx] = this.props.currentUser;
-      this.props.state.setState({
-        currentUser: null
-      })
-    } catch (error) {
-      console.error(error)
+    function changeEvent(event: any){
+        
+        switch (event.target.name) {
+            case "name":
+                setName(event.target.value);
+                break;
+            case "email":
+                setEmail(event.target.value);
+                break;
+            case "age":
+                setAge(event.target.value);
+                break;
+            default:
+                console.error("UNKNOW input name: changeEvent.event.target.name", event.target.name);
+                throw Error("UNKNOW input name: changeEvent.event.target.name", event.target.name);
+        }
+
+        if(currentUser != null){
+            try {
+              currentUser[event.target.name] = event.target.value;
+              stateCurrentUsers.saveCurrentUser(currentUser);
+            } catch (error) {
+              console.error('error', error);
+            }
+          }
+          else{
+            let tempcurrentUser = stateCurrentUsers.currentUser as unknown as User;
+            try {
+              if(tempcurrentUser!=null){
+                tempcurrentUser[event.target.name] = event.target.value;
+              }
+              stateCurrentUsers.saveCurrentUser(tempcurrentUser);
+            } catch(error){
+              console.error('error', error);
+            }
+          }
     }
-  }
 
-  async deleteEvent(){
-    console.info('UserForm.updateEvent')
-    let status: any = "";
-    if(this.props.currentUser?.id != null && this.props.currentUser?.id != undefined){
-      const id = this.props.currentUser?.id;
-      status = await UserService.delete(id);
+    async function updateEvent(){          
+        if(currentUser?.id != null && currentUser?.id != undefined){
+          const id = currentUser?.id;
+          try {
+            await UserService.update(currentUser, id);
+            // TODO: show feedback ok
+          } catch (error) {
+            console.error('ERROR: UserService.update.error:', error);
+            // TODO: show error
+          }
+          stateUsers.updateOneUser(currentUser);
+        }
+        
+        try {
+            stateUsers.updateOneUser(currentUser as User);
+        } catch (error) {
+          console.error('ERROR: stateUsers.updateOneUser.error:', error);
+        }
     }
 
-    try {
-      let idx = this.props.state.state.users.findIndex(((obj:any) => obj.id == this.props.currentUser?.id))
-      const userListState = this.props.state.state;
-      userListState.users.splice(idx, 1);
-      this.props.state.setState({
-        currentUser: null
-      })
-      
-    } catch (error) {
-      console.error(error)
+    function deleteEvent(){
+
     }
 
-  }
-  setRedirect = () => {
-    this.setState({
-      redirect: true
-    })
-  }
+    function saveEvent(){
 
-  render() {
+    }
+
+
+    useEffect(()=>{
+        //console.log('UserForm.useEffect.stateCurrentUsers: ', stateCurrentUsers);
+        
+        if(stateCurrentUsers.currentUser != undefined && stateCurrentUsers.currentUser != null ){
+            const user = stateCurrentUsers.currentUser as User;
+            setName(user.name);
+            setEmail(user.email);
+            setAge(user.age);
+        }
+        
+    }, [stateCurrentUsers])
 
     return (
-      <div>
+        <div>
         <form>
           <div className="input-group mb-3">
             <span className="input-group-text" id="input-name">👤</span>
             <input 
-              onChange={ (event) => this.changeEvent(event)}
-              key={`name-${this.props.currentUser?.id}`}
-              value={this.props.currentUser?.name}
+              onChange={ (event) => changeEvent(event)}
+              key={`name-${currentUser?.id}`}
+              value={name}
               type="text" 
               className="form-control" 
               name='name' 
               placeholder="Name" 
               aria-label="Name" 
-              aria-describedby="basic-addon1" />
+              aria-describedby="addon-wrapping" />
           </div>
 
           <div className="input-group mb-3">
             <span className="input-group-text" id="input-email">✉</span>
             <input 
-              onChange={ (event) => this.changeEvent(event)}
-              key={`email-${this.props.currentUser?.id}`}
-              value={this.props.currentUser?.email}
+              onChange={ (event) => changeEvent(event)}
+              key={`email-${currentUser?.id}`}
+              value={email}
               type="text" 
               className="form-control" 
               name='email' 
@@ -155,9 +130,9 @@ export default class UserForm extends Component<Props, State>{
           <div className="input-group mb-3">
             <span className="input-group-text" id="input-age"> № </span>
             <input 
-              onChange={ (event) => this.changeEvent(event)}
-              key={`age-${this.props.currentUser?.id}`}
-              value={this.props.currentUser?.age}
+              onChange={ (event) => changeEvent(event)}
+              key={`age-${currentUser?.id}`}
+              value={age}
               type="text" 
               className="form-control" 
               name='age'  
@@ -166,18 +141,26 @@ export default class UserForm extends Component<Props, State>{
               aria-describedby="addon-wrapping" />
           </div>
 
-          {this.props.currentUser ? (
-            <div className="d-grid gap-2 d-md-flex justify-content-md-end">
-              <button onClick={()=>this.updateEvent()} type="button" className="btn btn-warning">Update</button>
-              <button onClick={()=>this.deleteEvent()} type="button" className="btn btn-danger">Delete</button>
-            </div>
-          ):(
-            <div className="d-grid gap-2 d-md-flex justify-content-md-end">
-              <button onClick={this.saveEvent} type="button" className="btn btn-primary">Save</button>
-            </div>
+          { isAuthenticated ? (
+            <>
+            { currentUser ? (
+              <div className="d-grid gap-2 d-md-flex justify-content-md-end">
+                <button onClick={()=>updateEvent()} type="button" className="btn btn-warning">Update</button>
+                <button onClick={()=>deleteEvent()} type="button" className="btn btn-danger">Delete</button>
+              </div>
+            ):(
+              <div className="d-grid gap-2 d-md-flex justify-content-md-end">
+                <button onClick={saveEvent} type="button" className="btn btn-primary">Save</button>
+              </div>
+            )}
+            </>
+          ): (
+            <> 
+            {/** do nothing */}
+            </>
           )}
+
         </form>
       </div>
     )
-  }
 }

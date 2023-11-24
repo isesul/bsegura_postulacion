@@ -1,113 +1,89 @@
-import { Component, ChangeEvent } from "react";
-import UserService from "../services/users";
-import { Link } from "react-router-dom";
-import { User } from '../interfaces/user';
+import { createContext, useContext, useEffect, useState } from "react";
+import { User, IUserList } from '../interfaces/user';
 import UserForm from "./UserForm";
+import UserService from "../services/users";
+import { UsersContext, CurrentUserContext, useUsers, useCurrentUser } from "../contexts/UsersContextProvider";
 
-type Props = {};
+/**
+  * UserList Functional Component
+  * @description: 
+  * This component renders a users list obtained from backend.
+  */
+export default function UserList() {
 
-type State = {
-  users: Array<User>,
-  currentUser: User | null,
-  currentIndex: number,
-  searchTitle: string,
-  totalpages: number,
-  currentpage: number,
-};
+  // Global App state for Current User (Context React Api)
+  const stateUsers = useUsers();
+  const stateCurrentUsers = useCurrentUser();
+  
+  // Local Component state
+  const [totalPages, setTotalPages] = useState(10);
+  const [pages, setPages] = useState<number[]>([]);
+  const [currentPage, setCurrentpage] = useState(1);
+  const [currentIndex, setCurrentIndex] = useState(-1);
 
-export default class UserList extends Component<Props, State>{
-  constructor(props: Props) {
-    super(props);
-    this.retrieveUsers = this.retrieveUsers.bind(this);
-    this.refreshList = this.refreshList.bind(this);
-    this.setActiveUser = this.setActiveUser.bind(this);
-    this.selectPage = this.selectPage.bind(this);
-    this.nextPage = this.nextPage.bind(this);
-    this.previousPage = this.previousPage.bind(this);
+  async function retrieveUsers() {
 
-    this.state = {
-      users: [],
-      currentUser: null,
-      currentIndex: -1,
-      searchTitle: "",
-      totalpages: 0,
-      currentpage: 1
-    };
+    const retrievedUsers = await UserService.getAll();
+
+    stateUsers.saveUsers(retrievedUsers.data);
+    setTotalPages(retrievedUsers.headers.totalpages);
+    setPagesList(retrievedUsers.headers.totalpages);
+    
+    return retrievedUsers;
   }
 
-  async componentDidMount() {
-    await this.retrieveUsers();
-    console.log('componentDidMount');
+  function setPagesList(total_pages: number){
+    const list_pages: number[] = [];
+    for(let i = 1; i <= total_pages; i++){
+      list_pages.push(i);
+    }
+    setPages(list_pages);
+    return list_pages;
   }
 
-  async componentDidUpdate() {
-    // await this.selectPage(this.state.currentpage);
-    console.log('componentDidUpdate', this.state.currentpage);
-  }
-
-  async retrieveUsers() {
-    await UserService.getAll()
-      .then((response: any) => {
-        this.setState({
-          users: response.data,
-          totalpages: response.headers.totalpages
-        });
-      })
-      .catch((e: Error) => {
-        console.error(e);
-      });
-  }
-
-  async selectPage(page: number){
-    await UserService.getPage(page)
-    .then((response: any) => {
-      this.setState({
-        users: response.data,
-        totalpages: response.headers.totalpages,
-        currentpage: page
-      });
-    })
-    .catch((e: Error) => {
-      console.log(e);
-    });
-  }
-
-  async nextPage(){
-    if( (this.state.currentpage+1)<=this.state.totalpages ){
-      await this.selectPage((this.state.currentpage+1));
+  async function previousPage() {
+    if( (currentPage-1) > 0 ){
+      await selectPage((currentPage-1));
     }
   }
 
-  async previousPage(){
-    if( (this.state.currentpage-1) > 0 ){
-      await this.selectPage((this.state.currentpage-1));
+  async function nextPage() {
+    if( (currentPage+1)<=totalPages ){
+      await selectPage((currentPage+1));
     }
   }
 
-  async refreshList() {
-    await this.selectPage(this.state.currentpage);
-    this.setState({
-      currentUser: null,
-      currentIndex: -1
-    });
+  async function selectPage(selected_page: number) {
+    const retrievedUsers = await UserService.getPage(selected_page);
+    stateUsers.saveUsers(retrievedUsers.data);
+    setCurrentpage(selected_page);
+    stateCurrentUsers.saveCurrentUser(null);
+    setCurrentIndex(-1);
   }
 
-  setActiveUser(user: User, index: number) {
-    this.setState({
-      currentUser: user,
-      currentIndex: index
-    });
+  async function setActiveUser(user: any, index: any) {
+    stateCurrentUsers.saveCurrentUser(user);
+    // const idx = users.findIndex((iteruser) => iteruser.id === user.id);
+    setCurrentIndex(index);
   }
 
-  render() {
-    const { searchTitle, users, currentUser, currentIndex, totalpages } = this.state;
-    let pages = [];
-    for(let i = 1; i <= totalpages; i++){
-      pages.push(i);
+  async function loadComponent(){
+    if(stateUsers.users === null || stateUsers.users === undefined){
+      await retrieveUsers();
+    } else {
+      if(stateUsers.users.length <= 0 ){
+        console.warn('userlist empty: ');
+      }
     }
+  }
 
-    return (
-    <div className="list row">
+  useEffect(()=>{
+    loadComponent();
+     
+  },[stateUsers, stateCurrentUsers])
+
+  return (
+
       <div className="col-md-6">
         <h4>User List</h4>
 
@@ -122,12 +98,12 @@ export default class UserList extends Component<Props, State>{
           </thead>
 
           <tbody>
-
-          {users &&
-            users.map((user: User, index: number) => (
+          {stateUsers.users &&
+            stateUsers.users.map((user: User, index: number) => (
               <tr 
+                style={{cursor: "pointer"}}
                 className={currentIndex===index?'table-active':''} 
-                onClick={() => this.setActiveUser(user, index)} 
+                onClick={() => setActiveUser(user, index)} 
                 key={index} >
 
                   <th key={user.id} scope="row">{user.id}</th>
@@ -142,37 +118,20 @@ export default class UserList extends Component<Props, State>{
 
         <nav aria-label="Page navigation">
           <ul className="pagination">
-            <li key='page-previous' className="page-item"><a onClick={() => this.previousPage()} className="page-link" href="#">Previous</a></li>
+            <li key='page-previous' className="page-item"><a onClick={() => previousPage()} className="page-link" href="#">Previous</a></li>
             {
               pages.map((page:number) => (
                 <li 
                   key={`page-${page}`}
-                  className={page == this.state.currentpage ? "active" : "inactive"}
+                  className={page == currentPage ? "active" : "inactive"}
                 >
-                    <a onClick={() => this.selectPage(page)} className="page-link" >{page}</a>
+                  <a onClick={() => selectPage(page)} className="page-link" style={{cursor: "pointer"}}>{page}</a>
                 </li>
               ))
             }
-          <li key='page-next' className="page-item"><a onClick={() => this.nextPage()} className="page-link" href="#">Next</a></li>
+          <li key='page-next' className="page-item"><a onClick={() => nextPage()} className="page-link" href="#">Next</a></li>
           </ul>
         </nav>
-
       </div>
-
-      <div className="col-md-6">
-        <h4>User Detail</h4>
-        <br />
-        <br />
-        {currentUser ? (
-          <UserForm currentUser={this.state.currentUser} state={this}></UserForm>
-        ) : (
-          <div>
-            <br />
-            <p>Please click on a user...</p>
-          </div>
-        )}
-      </div>
-    </div>
-    )
-  }
+  )
 }

@@ -1,13 +1,13 @@
 import http from "../http-common";
-import {User, UserList} from "../interfaces/user"
+import {User, IUserList} from "../interfaces/user"
 
 class UserService {
   getAll() {
-    return http.get<Array<UserList>>("/Users");
+    return http.get<IUserList>("/Users");
   }
 
   getPage(page: number){
-    return http.get<Array<UserList>>(`/Users/?page=${page}`);
+    return http.get<IUserList>(`/Users/?page=${page}`);
   }
 
   get(id: string) {
